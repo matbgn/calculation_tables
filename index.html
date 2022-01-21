@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Calculation Tables</title>
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta content="width=device-width, initial-scale=1" name="viewport">
+    <script crossorigin src="https://unpkg.com/react@17/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap"/>
+    <link href="main.css" rel="stylesheet">
+</head>
+<body>
+<!-- React entrypoint-->
+<div id="app"></div>
+
+<!-- UI Framework Script-->
+<script src="https://unpkg.com/@mui/material@latest/umd/material-ui.production.min.js"></script>
+
+<!-- Download as PDF -->
+<script src="https://unpkg.com/jspdf@2.5.0/dist/jspdf.umd.min.js"></script>
+<script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+
+<!-- React Script -->
+<script datatype="module" type="text/babel">
+    const { AppBar, Toolbar, Container, Grid, Paper, Typography, Button, Box } = window['MaterialUI'];
+    const { TableContainer, Table, TableBody, TableRow, TableCell } = window['MaterialUI']
+
+    const TITLE = 'Calculation Tables'
+
+    const CalculationTable = (props) => {
+
+        return (
+            <TableContainer component={Paper}>
+                <Table size="small" aria-label="simple table">
+                    <TableBody>
+                        {props.values.map((value, index) => {
+                            return <CalculationRow key={index} num={value[0]} factor={value[1]} result={value[2]} operator={value[3]}/>
+                        })}
+                    </TableBody>
+                </Table>
+            </TableContainer>
+        )
+    }
+
+    const CalculationRow = (props) => {
+        return (
+            <TableRow>
+                <TableCell>{props.num}</TableCell>
+                <TableCell>{props.operator}</TableCell>
+                <TableCell>{props.factor}</TableCell>
+                <TableCell className="equals">=</TableCell>
+                <TableCell className="results">{props.result}</TableCell>
+            </TableRow>
+        )
+    }
+
+    const print = () => {
+        const { jsPDF } = window.jspdf
+        const doc = new jsPDF("p", "mm", "a4");
+
+        const source = window.document.getElementById("container");
+        doc.html(source,
+            {
+                callback: function (doc) {
+                    let today = new Date
+                    today = today.toISOString().slice(0,10).replace(/-/g,"")
+                    doc.save(`berechnungstabelle_${today}.pdf`);
+                },
+                x: 0,
+                y: 10,
+                html2canvas: { scale: 0.175 }
+            });
+    }
+
+    const showResults = () => {
+        const results_element = document.getElementsByClassName("results")[0]
+        if (results_element.style.display === "none") {
+            for (let i = 0; i < 240; i++) {
+                const results_element = document.getElementsByClassName("results")[i]
+                const equals_element = document.getElementsByClassName("equals")[i]
+                results_element.style.display = "table-cell";
+                equals_element.style.width = "1.3em"
+            }
+        }
+        else {
+            for (let i = 0; i < 240; i++) {
+                const results_element = document.getElementsByClassName("results")[i]
+                const equals_element = document.getElementsByClassName("equals")[i]
+                results_element.style.display = "none";
+                equals_element.style.width = "7em";
+            }
+        }
+    }
+
+    class Body extends React.Component {
+        constructor(props) {
+            super(props);
+        }
+
+        calculateTable() {
+            // Calculate for which operation:
+            const DIVISION = true
+            const MULTIPLICATION = true
+
+            const HOW_MUCH_OUTPUT_VALUES = 60
+            // if ALLOW_DUPLICATE is false it takes precedence on HOW_MUCH_OUTPUT_VALUES
+            const ALLOW_DUPLICATE = false
+
+            const FACTOR_MAX_VAL = 12
+
+            const MAX_NUM = 12
+            // Calculate all the range till MAX_NUM or only MAX_NUM?
+            const ONLY_MAX = true
+
+            // const NUM_LIST = []
+            const NUM_LIST = [2, 3, 4, 5, 6, 7, 8, 9, 11, 12]
+
+            // MAX_NUM or NUM_LIST?
+            let dict_reihe = ONLY_MAX ? [MAX_NUM] : this.range(2, MAX_NUM)
+            dict_reihe = NUM_LIST.length == 0 ? dict_reihe : NUM_LIST
+
+            const numberOfValues = ALLOW_DUPLICATE ? Math.round(HOW_MUCH_OUTPUT_VALUES / 2) : dict_reihe.length * FACTOR_MAX_VAL
+
+            const tempFactorList = []
+            const tempDivisionList = []
+            let iTempVal = 0
+            let iTmpFactor = 0
+            let iTmpDivision = 0
+            let sTmpValuesCouple = ""
+            const finalArray = []
+            Array.from({length: numberOfValues}, (_, i) => i + 1).forEach(() => {
+                // Multiplication line
+                while (true) {
+                    iTempVal = dict_reihe[Math.floor(Math.random() * dict_reihe.length)]
+                    iTmpFactor = Math.round(Math.random() * (FACTOR_MAX_VAL - 1)) + 1
+                    sTmpValuesCouple = `${iTmpFactor}x${iTempVal}`
+                    if (!tempFactorList.includes(sTmpValuesCouple)) {
+                        break
+                    }
+                    if (ALLOW_DUPLICATE) {
+                        break
+                    }
+                }
+                tempFactorList.push(sTmpValuesCouple)
+                finalArray.push([iTempVal, iTmpFactor, iTmpFactor * iTempVal, 'x'])
+
+                // Division line
+                while (true) {
+                    iTempVal = dict_reihe[Math.floor(Math.random() * dict_reihe.length)]
+                    iTmpDivision = iTempVal * (Math.round(Math.random() * (FACTOR_MAX_VAL - 1)) + 1)
+                    sTmpValuesCouple = `${iTmpDivision}/${iTempVal}`
+                    if (!tempDivisionList.includes(sTmpValuesCouple)) {
+                        break
+                    }
+                    if (ALLOW_DUPLICATE) {
+                        break
+                    }
+                }
+                tempDivisionList.push(sTmpValuesCouple)
+                finalArray.push([iTmpDivision, iTempVal, iTmpDivision / iTempVal, '/'])
+            })
+            return finalArray
+        }
+
+        range(start, end) {
+            return Array(end - start + 1).fill().map((_, idx) => start + idx)
+        }
+
+        render() {
+            const elements = [0, 30, 60, 90, 120, 150, 180, 210]
+
+            const values = this.calculateTable()
+
+            return (
+                <Container fixed id="container">
+                    {elements.map((el, index) => {
+                        return (
+                            <Grid container spacing={5}  sx={{mb: 10}} key={index}>
+                                <Grid item xs={4}>
+                                    <CalculationTable values={values.slice(0 + el, 10 + el)}/>
+                                </Grid>
+                                <Grid item xs={4}>
+                                    <CalculationTable values={values.slice(10 + el, 20 + el)}/>
+                                </Grid>
+                                <Grid item xs={4}>
+                                    <CalculationTable values={values.slice(20 + el, 30 + el)}/>
+                                </Grid>
+                            </Grid>
+                        )
+                    })}
+                </Container>
+            );
+        }
+
+    }
+
+    const Header = () => {
+        return (
+            <AppBar position="static">
+                <Container maxWidth="xl">
+                    <Toolbar disableGutters>
+                        <Box sx={{ flexGrow: 1 }}>
+                        <Typography
+                            variant="h6"
+                            noWrap
+                            component="div"
+                        >
+                            {TITLE}
+                        </Typography>
+                        </Box>
+                        <Box sx={{ flexShrink: 1, mx: 2 }}>
+                            <Button variant="contained" color="info"
+                                onClick={showResults}>Results</Button>
+                        </Box>
+                        <Box sx={{ flexShrink: 1 }}>
+                            <Button variant="contained" color="info"
+                                    onClick={print}>print</Button>
+                        </Box>
+                    </Toolbar>
+                </Container>
+            </AppBar>
+        )
+    }
+
+    class App extends React.Component {
+        constructor(props) {
+            super(props);
+
+        }
+
+        render() {
+            return (
+                <>
+                    <Header/>
+                    <Body/>
+                </>
+            )
+        }
+    }
+
+    ReactDOM.render(
+        <App/>, document.getElementById('app')
+    )
+</script>
+
+</body>
+</html>

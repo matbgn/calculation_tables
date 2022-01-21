@@ -1,0 +1,16 @@
+#container {
+    padding-top: 3em;
+}
+
+td.MuiTableCell-root {
+    /*margin: 0px;*/
+    /*padding: 0px;*/
+}
+
+td.results {
+    display: none;
+}
+
+td.equals {
+    width: 7em;
+}
