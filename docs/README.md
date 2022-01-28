@@ -3,7 +3,7 @@
 This React SPA test mathematical basic operations. 
 
 ## Usage
-Go to this page [https://matbgn.github.io/calculation-tables/](https://matbgn.github.io/reading-speed-and-accuracy/).
+Go to this page [https://matbgn.github.io/calculation_tables/](https://matbgn.github.io/calculation_tables/).
 
 <table border="0">
   <tr>
